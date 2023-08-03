@@ -1,0 +1,17 @@
+{
+  "name": "zk-linea-bridge",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "workspaces": [
+    "contracts",
+    "frontend"
+  ],
+  "author": "",
+  "license": "ISC"
+}
