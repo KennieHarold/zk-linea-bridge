@@ -5,13 +5,28 @@
   "private": true,
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "bridge:build": "yarn workspace bridge run build",
+    "bridge:compile": "yarn workspace bridge run compile",
+    "bridge:test": "yarn workspace bridge run test",
+    "frontend:dev": "yarn workspace frontend run dev",
+    "frontend:build": "yarn workspace frontend run build",
+    "frontend:start": "yarn workspace frontend run start",
+    "frontend:lint": "yarn workspace frontend run lint",
+    "clean:all": "npm exec --workspaces -- npx rimraf node_modules && npx rimraf node_modules"
   },
   "keywords": [],
-  "workspaces": [
-    "contracts",
-    "frontend"
-  ],
+  "workspaces": {
+    "packages": [
+      "bridge",
+      "frontend",
+      "services"
+    ],
+    "nohoist": [
+      "**/circomlib",
+      "**/circomlib/**"
+    ]
+  },
   "author": "",
   "license": "ISC"
 }
