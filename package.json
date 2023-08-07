@@ -24,7 +24,9 @@
     ],
     "nohoist": [
       "**/circomlib",
-      "**/circomlib/**"
+      "**/circomlib/**",
+      "**/@openzeppelin/contracts",
+      "**/@openzeppelin/contracts/**"
     ]
   },
   "author": "",
