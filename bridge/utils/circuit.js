@@ -2,6 +2,11 @@ const crypto = require('crypto');
 const groth16 = require('snarkjs').groth16;
 const circomlib = require('circomlib');
 
+function toFixedHex(number, length = 32) {
+  const str = BigInt(number).toString(16);
+  return '0x' + str.padStart(length * 2, '0');
+}
+
 function rbuffer(nbytes) {
   return crypto.randomBytes(nbytes);
 }
@@ -46,6 +51,7 @@ function toBigIntLE(buf) {
 }
 
 module.exports = {
+  toFixedHex,
   genProofArgs,
   unStringifyBigInts,
   toBigIntLE,

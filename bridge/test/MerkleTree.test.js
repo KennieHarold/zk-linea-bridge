@@ -2,13 +2,9 @@ require('chai').use(require('bn-chai')(web3.utils.BN)).use(require('chai-as-prom
 const MerkleTree = artifacts.require('./MerkleTreeMock.sol');
 const hasherContract = artifacts.require('./Hasher.sol');
 const { MerkleTree: MerkleTreeUtil } = require('../utils/merkleTree');
+const { toFixedHex } = require('../utils/circuit');
 
 const { MERKLE_TREE_HEIGHT } = process.env;
-
-function toFixedHex(number, length = 32) {
-  const str = BigInt(number).toString(16);
-  return '0x' + str.padStart(length * 2, '0');
-}
 
 contract('MerkleTree', (accounts) => {
   let merkleTree;
@@ -52,8 +48,8 @@ contract('MerkleTree', (accounts) => {
         await merkleTree.insert(toFixedHex(i + 42)).should.be.fulfilled;
       }
 
-      let error = await merkleTree.insert(toFixedHex(1337)).should.be.rejected;
-      error = await merkleTree.insert(toFixedHex(1)).should.be.rejected;
+      await merkleTree.insert(toFixedHex(1337)).should.be.rejected;
+      await merkleTree.insert(toFixedHex(1)).should.be.rejected;
     });
   });
 

@@ -18,6 +18,8 @@ contract ZKProofVerifier is MerkleTree, ReentrancyGuard {
     mapping(bytes32 => bool) public nullifierHashes;
     mapping(bytes32 => bool) public commitments;
 
+    event AddCommitment(bytes32 indexed commitment, uint32 leafIndex, uint256 timestamp);
+
     constructor(
         IVerifier _verifier,
         IHasher _hasher,
@@ -35,8 +37,9 @@ contract ZKProofVerifier is MerkleTree, ReentrancyGuard {
         if (commitments[_commitment]) {
             revert ZKProofVerifier__CommitmentAlreadySpent();
         }
-        _insert(_commitment);
+        uint32 insertedIndex = _insert(_commitment);
         commitments[_commitment] = true;
+        emit AddCommitment(_commitment, insertedIndex, block.timestamp);
     }
 
     function _verifyWithdrawal(
