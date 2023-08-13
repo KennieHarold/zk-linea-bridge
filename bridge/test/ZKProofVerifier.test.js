@@ -1,4 +1,4 @@
-require('chai').use(require('bn-chai')(web3.utils.BN)).use(require('chai-as-promised')).should();
+require('chai');
 const path = require('path');
 
 const { MerkleTree } = require('../utils/merkleTree');
@@ -22,11 +22,12 @@ const levels = Number(process.env.MERKLE_TREE_HEIGHT) || 20;
 const value = process.env.ETH_AMOUNT || '1000000000000000000'; // 1 ether
 
 contract('ZKProofVerifier', () => {
-  let [hasher, verifier, zKProofVerifier] = [];
+  let [zKProofVerifier] = [];
 
   beforeEach(async function () {
-    hasher = await hasherContract.deployed();
-    verifier = await verifierContract.deployed();
+    const hasher = await hasherContract.deployed();
+    const verifier = await verifierContract.deployed();
+
     zKProofVerifier = await zkProofVerifierContract.new(
       verifier.address,
       hasher.address,
@@ -70,7 +71,8 @@ contract('ZKProofVerifier', () => {
       const leafIndex = events[0].args.leafIndex;
       const merkleProof = tree.proof(leafIndex);
 
-      (await zKProofVerifier.isKnownRoot(toFixedHex(tree.root()))).should.be.true;
+      const isKnownRoot = await zKProofVerifier.isKnownRoot(toFixedHex(tree.root()));
+      isKnownRoot.should.be.true;
 
       const input = {
         secret: secret.toString(),
@@ -86,7 +88,9 @@ contract('ZKProofVerifier', () => {
       const args = [toFixedHex(tree.root()), toFixedHex(nullifierHash.toString())];
 
       await zKProofVerifier.verifyWithdrawal(...proofArgs, ...args);
-      (await zKProofVerifier.isSpent(toFixedHex(nullifierHash.toString()))).should.be.true;
+      const isSpent = await zKProofVerifier.isSpent(toFixedHex(nullifierHash.toString()));
+      isSpent.should.be.true;
+
       await zKProofVerifier.verifyWithdrawal(...proofArgs, ...args).should.be.rejected;
     });
   });

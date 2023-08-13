@@ -15,13 +15,13 @@ error ZKLineaBridgeVault__TokenAlreadyWhitelisted();
 error ZKLineaBridgeVault__InvalidProof();
 
 contract ZKLineaBridgeVault is ZKProofVerifier, Ownable {
-    uint256 nonce;
+    uint256 public nonce;
 
     mapping(IERC20 => bool) whitelistedTokens;
     mapping(uint256 => bool) nonces;
 
-    event Locked(address indexed _account, IERC20 indexed _token, uint256 _amount);
-    event Unlocked(address indexed _recipient, IERC20 indexed _token, uint256 _amount);
+    event Locked(bytes32 indexed _commitment, address indexed _account, IERC20 _token, uint256 _amount, uint256 _nonce);
+    event Unlocked(address indexed _recipient, IERC20 _token, uint256 _amount);
     event WhitelistToken(IERC20 indexed _token);
 
     constructor(
@@ -31,7 +31,7 @@ contract ZKLineaBridgeVault is ZKProofVerifier, Ownable {
         uint32 _merkleTreeHeight
     ) ZKProofVerifier(_verifier, _hasher, _denomination, _merkleTreeHeight) {}
 
-    function lock(IERC20 _token, address _account, uint256 _amount) external {
+    function lock(bytes32 _commitment, IERC20 _token, uint256 _amount) external {
         if (!whitelistedTokens[_token]) {
             revert ZKLineaBridgeVault__TokenNotWhitelisted();
         }
@@ -43,8 +43,8 @@ contract ZKLineaBridgeVault is ZKProofVerifier, Ownable {
         if (!success) {
             revert ZKLineaBridgeVault__TransferFailed();
         }
+        emit Locked(_commitment, _msgSender(), _token, _amount, nonce);
         nonce++;
-        emit Locked(_account, _token, _amount);
     }
 
     function unlock(
@@ -52,13 +52,15 @@ contract ZKLineaBridgeVault is ZKProofVerifier, Ownable {
         uint256[2][2] memory b,
         uint256[2] memory c,
         uint256[1] memory input,
-        IERC20 _token,
-        address _recipient,
-        uint256 _amount,
-        uint256 _nonce,
         bytes32 _root,
-        bytes32 _nullifierHash
+        bytes32 _nullifierHash,
+        IERC20 _token,
+        uint256 _amount,
+        uint256 _nonce
     ) external {
+        if (!whitelistedTokens[_token]) {
+            revert ZKLineaBridgeVault__TokenNotWhitelisted();
+        }
         if (nonces[_nonce]) {
             revert ZKLineaBridgeVault__TransferAlreadyProcessed();
         }
@@ -71,8 +73,8 @@ contract ZKLineaBridgeVault is ZKProofVerifier, Ownable {
             revert ZKLineaBridgeVault__InvalidProof();
         }
         nonces[_nonce] = true;
-        _token.transfer(_recipient, _amount);
-        emit Unlocked(_recipient, _token, _amount);
+        _token.transfer(_msgSender(), _amount);
+        emit Unlocked(_msgSender(), _token, _amount);
     }
 
     function whitelistToken(IERC20 _token) external onlyOwner {
@@ -81,5 +83,13 @@ contract ZKLineaBridgeVault is ZKProofVerifier, Ownable {
         }
         whitelistedTokens[_token] = true;
         emit WhitelistToken(_token);
+    }
+
+    function isWhitelistedToken(IERC20 _token) external view returns (bool) {
+        return whitelistedTokens[_token];
+    }
+
+    function isNonceAlreadyProcessed(uint256 _nonce) external view returns (bool) {
+        return nonces[_nonce];
     }
 }

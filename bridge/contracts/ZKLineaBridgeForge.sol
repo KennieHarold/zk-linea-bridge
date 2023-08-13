@@ -14,13 +14,19 @@ error ZKLineaBridgeForge__TokenAlreadyWhitelisted();
 error ZKLineaBridgeForge__InvalidProof();
 
 contract ZKLineaBridgeForge is ZKProofVerifier, Ownable {
-    uint256 nonce;
+    uint256 public nonce;
 
     mapping(ITokenForgeable => bool) whitelistedTokens;
     mapping(uint256 => bool) nonces;
 
-    event Burn(address indexed _account, ITokenForgeable indexed _token, uint256 _amount);
-    event Mint(address indexed _recipient, ITokenForgeable indexed _token, uint256 _amount);
+    event Burn(
+        bytes32 indexed _commitment,
+        address indexed _account,
+        ITokenForgeable _token,
+        uint256 _amount,
+        uint256 _nonce
+    );
+    event Mint(address indexed _recipient, ITokenForgeable _token, uint256 _amount);
     event WhitelistToken(ITokenForgeable indexed _token);
 
     constructor(
@@ -30,7 +36,7 @@ contract ZKLineaBridgeForge is ZKProofVerifier, Ownable {
         uint32 _merkleTreeHeight
     ) ZKProofVerifier(_verifier, _hasher, _denomination, _merkleTreeHeight) {}
 
-    function burn(ITokenForgeable _token, address _account, uint256 _amount) external {
+    function burn(bytes32 _commitment, ITokenForgeable _token, uint256 _amount) external {
         if (!whitelistedTokens[_token]) {
             revert ZKLineaBridgeForge__TokenNotWhitelisted();
         }
@@ -38,9 +44,9 @@ contract ZKLineaBridgeForge is ZKProofVerifier, Ownable {
         if (accountBalance < _amount) {
             revert ZKLineaBridgeForge__NotEnoughTokens();
         }
-        _token.burn(_account, _amount);
+        _token.burn(_msgSender(), _amount);
+        emit Burn(_commitment, _msgSender(), _token, _amount, nonce);
         nonce++;
-        emit Burn(_account, _token, _amount);
     }
 
     function mint(
@@ -48,13 +54,15 @@ contract ZKLineaBridgeForge is ZKProofVerifier, Ownable {
         uint256[2][2] memory b,
         uint256[2] memory c,
         uint256[1] memory input,
-        ITokenForgeable _token,
-        address _recipient,
-        uint256 _amount,
-        uint256 _nonce,
         bytes32 _root,
-        bytes32 _nullifierHash
+        bytes32 _nullifierHash,
+        ITokenForgeable _token,
+        uint256 _amount,
+        uint256 _nonce
     ) external {
+        if (!whitelistedTokens[_token]) {
+            revert ZKLineaBridgeForge__TokenNotWhitelisted();
+        }
         if (nonces[_nonce]) {
             revert ZKLineaBridgeForge__TransferAlreadyProcessed();
         }
@@ -63,8 +71,8 @@ contract ZKLineaBridgeForge is ZKProofVerifier, Ownable {
             revert ZKLineaBridgeForge__InvalidProof();
         }
         nonces[_nonce] = true;
-        _token.mint(_recipient, _amount);
-        emit Mint(_recipient, _token, _amount);
+        _token.mint(_msgSender(), _amount);
+        emit Mint(_msgSender(), _token, _amount);
     }
 
     function whitelistToken(ITokenForgeable _token) external onlyOwner {
@@ -73,5 +81,13 @@ contract ZKLineaBridgeForge is ZKProofVerifier, Ownable {
         }
         whitelistedTokens[_token] = true;
         emit WhitelistToken(_token);
+    }
+
+    function isWhitelistedToken(ITokenForgeable _token) external view returns (bool) {
+        return whitelistedTokens[_token];
+    }
+
+    function isNonceAlreadyProcessed(uint256 _nonce) external view returns (bool) {
+        return nonces[_nonce];
     }
 }

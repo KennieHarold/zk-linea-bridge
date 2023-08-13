@@ -6,11 +6,9 @@ const { toFixedHex } = require('../utils/circuit');
 
 const { MERKLE_TREE_HEIGHT } = process.env;
 
-contract('MerkleTree', (accounts) => {
-  let merkleTree;
-  let hasherInstance;
+contract('MerkleTree', ([sender]) => {
+  let [merkleTree, hasherInstance] = [];
   let levels = MERKLE_TREE_HEIGHT || 16;
-  const sender = accounts[0];
   let tree;
 
   before(async () => {
