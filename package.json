@@ -5,13 +5,14 @@
   "private": true,
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "bridge:build": "yarn workspace bridge run build",
     "bridge:compile": "yarn workspace bridge run compile",
     "bridge:test": "yarn workspace bridge run test",
     "bridge:ganache": "yarn workspace bridge run ganache",
     "bridge:clean": "yarn workspace bridge run clean",
     "bridge:migrate": "yarn workspace bridge run migrate",
+    "relayer:dev": "yarn workspace relayer run dev",
+    "relayer:start": "yarn workspace relayer run start",
     "frontend:dev": "yarn workspace frontend run dev",
     "frontend:build": "yarn workspace frontend run build",
     "frontend:start": "yarn workspace frontend run start",
@@ -23,7 +24,7 @@
     "packages": [
       "bridge",
       "frontend",
-      "services"
+      "relayer"
     ],
     "nohoist": [
       "**/circomlib",
