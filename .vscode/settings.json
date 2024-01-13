@@ -3,6 +3,7 @@
     "circomlib",
     "groth16",
     "hasher",
+    "hdwallet",
     "Linea",
     "nbytes",
     "pedersen",
